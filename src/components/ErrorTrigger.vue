@@ -8,16 +8,7 @@ const handleClick = () => {
 </script>
 
 <template>
-  <button
-    @click="
-      {
-        handleClick
-      }
-    "
-    class="errorbtn"
-  >
-    Trigger Error
-  </button>
+  <button @click="handleClick" class="errorbtn">Trigger Error</button>
 </template>
 
 <style scoped>

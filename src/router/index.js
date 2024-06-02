@@ -14,15 +14,13 @@ const router = createRouter({
     {
       path: '/repos',
       name: 'GitHubRepo',
-      component: GitHubRepo,
-      children: [
-        {
-          path: ':repoName',
-          name: 'RepoDatils',
-          component: RepoDetails,
-          props: true
-        }
-      ]
+      component: GitHubRepo
+    },
+    {
+      path: '/repo/:repoName',
+      name: 'RepoDetails',
+      component: RepoDetails,
+      props: true
     }
   ]
 })

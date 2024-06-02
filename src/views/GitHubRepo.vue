@@ -1,34 +1,22 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import RepoDetails from '../components/RepoDetails.vue'
+import { ref, computed } from 'vue'
+import { useFetch } from '@vueuse/core'
 
-const repositories = ref([])
-const loading = ref(true)
-const error = ref(null)
 const searchQuery = ref('')
 const currentPage = ref(1)
 const reposPerPage = 3
 
-onMounted(async () => {
-  try {
-    const response = await fetch('https://api.github.com/users/Pokah1/repos')
-    if (!response.ok) {
-      console.error('HTTP error:', response.status, response.statusText)
-      throw new Error('Failed to fetch repositories')
-    }
-    const data = await response.json()
-    repositories.value = data
-  } catch (err) {
-    console.error('Error fetching repositories:', err)
-    error.value = err.message
-  } finally {
-    loading.value = false
-  }
-})
+const {
+  data: repositories,
+  error,
+  isFetching: loading
+} = useFetch('https://api.github.com/users/Pokah1/repos').json()
 
 const filteredRepositories = computed(() => {
-  return repositories.value.filter((repo) =>
-    repo.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  return (
+    repositories.value?.filter((repo) =>
+      repo.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    ) || []
   )
 })
 
@@ -51,33 +39,27 @@ const paginate = (pageNumber) => {
     </header>
 
     <div v-if="loading">Loading...</div>
-    <div v-else-if="error">Error: {{ error }}</div>
+    <div v-else-if="error">Error: {{ error.message }}</div>
     <div v-else>
       <ul class="list">
-        <!-- I WILL COME BACK TO THIS LATER -->
         <li v-for="repo in currentRepos" :key="repo.id" class="item">
-          <a :href="repo.html_url" target="_blank">{{ repo.name }}</a>
+          <router-link :to="{ name: 'RepoDetails', params: { repoName: repo.name } }">{{
+            repo.name
+          }}</router-link>
         </li>
-        <!-- I WILL COME BACK TO THIS LATER -->
       </ul>
       <nav class="nav">
         <button @click="paginate(currentPage - 1)" :disabled="currentPage === 1">Previous</button>
         <button
           @click="paginate(currentPage + 1)"
           :disabled="
-            indexOfLastRepo.value >=
-            (filteredRepositories.value ? filteredRepositories.value.length : 0)
+            filteredRepositories.value && indexOfLastRepo.value >= filteredRepositories.value.length
           "
         >
           Next
         </button>
       </nav>
     </div>
-    <footer class="nav">
-      <router-link to="/">
-        <button>Go to Home Page</button>
-      </router-link>
-    </footer>
   </main>
 </template>
 

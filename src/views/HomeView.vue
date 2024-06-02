@@ -44,7 +44,7 @@ onBeforeUnmount(() => {
     </section>
     <section class="side2">
       <!-- Add content here if necessary -->
-      <figure><img src="/src/assets/Profile pic (1).jpeg" alt="" /></figure>
+      <figure><img src="/src/assets/profile-pic.jpeg" alt="my profile picture" /></figure>
       <aside class="social-svgs">
         <GitHubIcon />
         <LinkedInIcon />
