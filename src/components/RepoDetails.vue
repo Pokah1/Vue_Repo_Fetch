@@ -1,14 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 const repoName = route.params.repoName
 const repoDetails = ref(null)
 const ownerDetails = ref(null)
 const loading = ref(true)
 const error = ref(null)
-const notFound = ref(false)
 
 const fetchRepoDetails = async () => {
   try {
@@ -21,7 +21,7 @@ const fetchRepoDetails = async () => {
     await fetchOwnerDetails(data.owner.login)
   } catch (err) {
     error.value = err.message
-    notFound.value = true
+    router.push({ name: 'pageNotFound' }) // Redirect to 404 page
   } finally {
     loading.value = false
   }
@@ -35,7 +35,6 @@ const fetchOwnerDetails = async (ownerLogin) => {
     }
     const data = await response.json()
     ownerDetails.value = data
-    console.log('Owner Details:', ownerDetails.value) // Debugging log
   } catch (err) {
     console.error('Error fetching owner details:', err)
   }
@@ -54,8 +53,18 @@ onMounted(() => {
       <p>Language: {{ repoDetails.language }}</p>
       <p>Stars: {{ repoDetails.stargazers_count }}</p>
       <p>Forks: {{ repoDetails.forks_count }}</p>
-      <p>Last Updated: {{ repoDetails.updated_at }}</p>
+
+      <p>Watchers: {{ repoDetails.watchers_count }}</p>
+
+      <p>Size: {{ repoDetails.size }} KB</p>
+      <p>Created At: {{ new Date(repoDetails.created_at).toLocaleDateString() }}</p>
+      <p>Last Updated: {{ new Date(repoDetails.updated_at).toLocaleDateString() }}</p>
+      <p>Pushed At: {{ new Date(repoDetails.pushed_at).toLocaleDateString() }}</p>
+
+      <p>Visibility: {{ repoDetails.visibility }}</p>
+
       <p>License: {{ repoDetails.license ? repoDetails.license.name : 'N/A' }}</p>
+
       <p>
         Repository URL:
         <a :href="repoDetails.html_url" target="_blank" rel="noopener noreferrer">
@@ -82,13 +91,8 @@ onMounted(() => {
     <div v-else-if="loading">Loading...</div>
     <div v-else>Error: {{ error }}</div>
   </main>
-  <div v-else>
-    <h2>Repository Not Found</h2>
-    <router-link to="/">
-      <button class="button">Return to Repositories</button>
-    </router-link>
-  </div>
 </template>
+
 <style scoped>
 .mainn {
   display: flex;
@@ -100,11 +104,11 @@ onMounted(() => {
   flex: 1;
   margin: 20px 20px 10px 30px;
   padding: 0 0 10px 10px;
-  position: fixed;
+  position: sticky;
   right: 40%;
   left: 0;
   top: 0;
-  height: 1000vh;
+  height: 100vh;
 }
 .ownerDetails {
   padding-left: 20px;
@@ -116,9 +120,9 @@ onMounted(() => {
   text-align: justify;
 }
 .ownerDetails h3 {
-  margin-top: 70px;
-  margin-bottom: 40pc;
-  display: flex;
+  margin-top: 10px;
+  margin-bottom: 40px;
+  text-align: center;
 }
 .ownerDetails p {
   margin-bottom: 10px;
@@ -143,9 +147,7 @@ figure img {
   font-size: 1.2rem;
   color: #fff;
 }
-.button:hover {
-  background-color: #0056b3;
-}
+
 .heada {
   font-size: 1.5rem;
   margin: 15px 0 40px 0;

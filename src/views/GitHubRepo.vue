@@ -1,44 +1,22 @@
-<script setup>
-import { ref, computed } from 'vue'
-import { useFetch } from '@vueuse/core'
-
-const searchQuery = ref('')
-const currentPage = ref(1)
-const reposPerPage = 3
-
-const {
-  data: repositories,
-  error,
-  isFetching: loading
-} = useFetch('https://api.github.com/users/Pokah1/repos').json()
-
-const filteredRepositories = computed(() => {
-  return (
-    repositories.value?.filter((repo) =>
-      repo.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    ) || []
-  )
-})
-
-const indexOfLastRepo = computed(() => currentPage.value * reposPerPage)
-const indexOfFirstRepo = computed(() => indexOfLastRepo.value - reposPerPage)
-const currentRepos = computed(() => {
-  return filteredRepositories.value.slice(indexOfFirstRepo.value, indexOfLastRepo.value)
-})
-
-const paginate = (pageNumber) => {
-  currentPage.value = pageNumber
-}
-</script>
-
 <template>
   <main class="main">
     <header class="head">
-      <h1 class="repo-info">My GitHub Repositories</h1>
+      <h1 class="repo-info">{{ loading ? 'Loading...' : 'My GitHub Repositories' }}</h1>
       <input type="text" placeholder="Search repositories..." v-model="searchQuery" class="input" />
     </header>
 
-    <div v-if="loading">Loading...</div>
+    <div v-if="loading || !repositories">
+      <!-- Skeleton placeholder -->
+      <div v-if="showSkeleton">
+        <div v-for="index in 3" :key="index" class="skeleton-placeholder">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+        </div>
+      </div>
+    </div>
+
     <div v-else-if="error">Error: {{ error.message }}</div>
     <div v-else>
       <ul class="list">
@@ -62,6 +40,49 @@ const paginate = (pageNumber) => {
     </div>
   </main>
 </template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useFetch } from '@vueuse/core'
+
+const searchQuery = ref('')
+const currentPage = ref(1)
+const reposPerPage = 3
+
+const {
+  data: repositories,
+  error,
+  isFetching: loading
+} = useFetch('https://api.github.com/users/Pokah1/repos').json()
+
+const showSkeleton = ref(true) // Define showSkeleton ref here
+
+const filteredRepositories = computed(() => {
+  return (
+    (Array.isArray(repositories.value) &&
+      repositories.value?.filter((repo) =>
+        repo.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+      )) ||
+    []
+  )
+})
+
+const indexOfLastRepo = computed(() => currentPage.value * reposPerPage)
+const indexOfFirstRepo = computed(() => indexOfLastRepo.value - reposPerPage)
+const currentRepos = computed(() => {
+  return filteredRepositories.value.slice(indexOfFirstRepo.value, indexOfLastRepo.value)
+})
+
+const paginate = (pageNumber) => {
+  currentPage.value = pageNumber
+}
+
+onMounted(() => {
+  setTimeout(() => {
+    showSkeleton.value = false
+  }, 3000)
+})
+</script>
 
 <style scoped>
 .main {
@@ -135,6 +156,7 @@ const paginate = (pageNumber) => {
   color: white;
   -webkit-background-clip: text;
   font-size: 1.2rem;
+  background-color: green;
 }
 
 .nav button:disabled {
@@ -144,35 +166,17 @@ const paginate = (pageNumber) => {
   box-shadow: none;
 }
 
-@media (max-width: 700px) {
-  .main {
-    margin: 10px;
-    padding: 10px;
-  }
-  .head {
-    font-size: 1rem;
-    margin: 10px 0 40px 0;
-  }
-  .input {
-    width: 70%;
-    margin: 40px auto;
-    display: block;
-  }
-  .list {
-    width: 100%;
-  }
-  .item {
-    width: 100%;
-    margin-bottom: 30px;
-  }
-  .nav {
-    flex-direction: column;
-    align-items: center;
-    margin-top: 50px;
-  }
-  .nav button {
-    width: auto;
-    margin: 20px 0 20px 0;
-  }
+.skeleton-placeholder {
+  margin-bottom: 30px;
+}
+
+.skeleton-line {
+  height: 50px;
+  width: 50%;
+  background: linear-gradient(to left, #777771f5, rgb(62, 65, 62));
+  border-radius: 5px;
+
+  margin-bottom: 5px;
+  border-radius: 5px;
 }
 </style>
